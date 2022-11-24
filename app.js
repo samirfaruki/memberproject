@@ -6,6 +6,10 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const mongoose = require("mongoose");
 const mongoDB = process.env.MONGO_KEY;
+var passport = require('passport');
+var LocalStrategy = require('passport-local');
+var session = require('express-session');
+
 
 mongoose.connect(mongoDB); // database connectivity
 
@@ -15,6 +19,7 @@ db1.on("error", console.error.bind(console, "MongoDB connection error:"));
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
+
 
 var app = express();
 
@@ -27,9 +32,40 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+app.use(session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: false,
+ 
+}));
+app.use(passport.authenticate('session'));
+
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+    User.findOne({ username: username }, function (err, user) {
+      if (err) { return done(err); }
+      if (!user) { return done(null, false); }
+      if (!user.verifyPassword(password)) { return done(null, false); }
+      return done(null, user);
+    });
+  }
+));
+
+passport.serializeUser(function(user, cb) {
+  process.nextTick(function() {
+    cb(null, { id: user.id, username: user.username });
+  });
+});
+
+passport.deserializeUser(function(user, cb) {
+  process.nextTick(function() {
+    return cb(null, user);
+  });
+});
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
+
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
