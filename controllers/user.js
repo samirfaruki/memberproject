@@ -59,8 +59,5 @@ exports.post =
   ("/login",
   (req, res) => {
     passport.authenticate("local", { failureRedirect: "/login" }),
-      res.render("message.ejs");
+      res.render("message");
   });
-
-
-  

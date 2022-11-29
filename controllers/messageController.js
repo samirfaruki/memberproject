@@ -1,4 +1,5 @@
-const message = require("../models/message");
+const { Result } = require("express-validator");
+const messageModel = require("../models/message");
 
 exports.get =
   ("/message",
@@ -22,20 +23,16 @@ exports.post =
 
       minute: "numeric",
     });
-
-    let post = new message({
+    console.log(date);
+    let post = new messageModel({
       name: req.body.name,
-
       text: req.body.text,
-
-      time: date,
+      date: date,
     });
-
+    console.log(post);
     post.save(function (err) {
-      if (err) {
-        return err;
-      }
+      if (err) throw err;
 
-      res.redirect("/");
+      res.render("welcome",{result:post});
     });
   });
